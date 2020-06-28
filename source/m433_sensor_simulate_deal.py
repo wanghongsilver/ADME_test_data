@@ -20,26 +20,32 @@ def func_m433_sensor_rec(ser):
     while True:
         #接收数据
         ser_data = ser.readline()
+        # ser_data = "##START*8C\r\n"
         print(ser_data)
         # 进行数据判断，crc
-        Crc.create(ser_data[:-4])
-        crc = 1
-        if crc == 1:
-            if "CFG" in ser_data:
-                write_str = "hello"
+        if len(ser_data) < 1:
+            continue
+        crcbuf = Crc.create(str_to_hex(ser_data[:-5]))
+        crcstr = str(crcbuf).upper()
+        crcresult = str(crcstr[2:])
+
+        print(crcresult)
+        if crcresult in ser_data:
+            if "##CFG" in ser_data:
+                write_str = "$$CFG:OK\r\n"
                 ser.write(write_str.encode())
-            elif "START" in ser_data:
-                write_str = "hello"
+            elif "##START" in ser_data:
+                write_str = "$$START:OK\r\n"
                 ser.write(write_str.encode())
-            elif "TURNOFF" in ser_data:
-                write_str = "hello"
+            elif "##TURNOFF" in ser_data:
+                write_str = "$$STURNOFF:OK\r\n"
                 ser.write(write_str.encode())
-            elif "READ" in ser_data:
-                write_str = "hello"
+            elif "##READ:" in ser_data:
+                write_str = "READ"
                 ser.write(write_str.encode())
             else:
                 print(ser_data)
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 
 
@@ -53,10 +59,12 @@ def func_m433_sensor_simulate_deal(input_file_name, usr_com, usr_baud):
     input_file_name：新版DAG日志文件 从mcloud下载，格式为txt
     """
     usr_ser = func_m433_sensor_open(usr_com, usr_baud)
-    # func_m433_sensor_rec(usr_ser)
-    Crc = CRC_G()
-    data_str = 'MDM,1912A4T,ADS,2006251907,S,0620,$$READ:9,ADS,1701,4500+8.5190+0.0000+23.8,3.6'
-    Crc.create(str_to_hex(data_str))
+    func_m433_sensor_rec(usr_ser)
+    # Crc = CRC_G()
+    # data_str = 'MDM,1912A4T,ADS,2006251907,S,0620,$$READ:9,ADS,1701,4500+8.5190+0.0000+23.8,3.6'
+    # crcdata = Crc.create(str_to_hex(data_str))
+    # crcstr = str(crcdata).upper()
+    # print(crcstr[2:])
     # Crc.create('2424524541443a382c4144532c313635312c343030302b372e383930312b302e303030302b32332e382c332e36')
 
 func_m433_sensor_simulate_deal('../data/txt/1912A4T_RawData_2020-06-27-16-39-58.txt','COM5', 115200)
